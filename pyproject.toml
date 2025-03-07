@@ -1,0 +1,31 @@
+[project]
+name = "svsbench"
+version = "0.1.0"
+description = "Benchmarking for Scalable Vector Search"
+readme = "README.md"
+authors = [
+    { name = "Mihai Capotă", email = "mihai.capota@intel.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "hnswlib>=0.8.0",
+    "numpy>=1.10",
+    "pandas>=2",
+    "scalable-vs>=0.0.6",
+    "tqdm>=4.67",
+]
+classifiers = ["Private :: Do Not Upload"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.6",
+]
+
+[tool.ruff]
+line-length = 79
