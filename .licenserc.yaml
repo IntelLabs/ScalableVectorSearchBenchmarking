@@ -1,0 +1,22 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+header:
+  license:
+    spdx-id: Apache-2.0
+    pattern: |
+      Copyright (C) \d{4} Intel Corporation
+      SPDX-License-Identifier: Apache-2.0
+
+  paths-ignore:
+    - ".github/workflows/scorecard.yml"
+    - "CODE_OF_CONDUCT.md"
+    - "CONTRIBUTING.md"
+    - "LICENSE"
+    - "NOTICE"
+    - "pyproject.toml"
+    - "README.md"
+    - "requirements.txt"
+    - "SECURITY.md"
+
+  comment: never
