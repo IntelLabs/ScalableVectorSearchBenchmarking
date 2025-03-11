@@ -4,7 +4,6 @@
 
 import argparse
 import logging
-import os
 import sys
 import time
 from pathlib import Path
@@ -30,20 +29,9 @@ logger = logging.getLogger(__file__)
 def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Read command line arguments."""
     parser = argparse.ArgumentParser(description=__file__.__doc__)
+    utils.add_common_arguments(parser)
     parser.add_argument(
         "--batch_size", help="Batch size", type=int, action="append"
-    )
-    parser.add_argument(
-        "--max_threads",
-        help="Maximum number of threads",
-        default=max(len(os.sched_getaffinity(0)) - 1, 1),
-        type=int,
-    )
-    parser.add_argument(
-        "--svs_type",
-        help="SVS type",
-        choices=consts.SVS_TYPES,
-        default="float32",
     )
     parser.add_argument(
         "--query_type",
@@ -108,11 +96,10 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         "-k", help="Number of neighbors to return", default=10, type=int
     )
     parser.add_argument(
-        "--idx_like_loader",
-        help="The index was saved with the same data type used by the loader",
+        "--idx_not_compressed",
+        help="The index is not compressed",
         action="store_true",
     )
-    parser.add_argument("--log_dir", help="Log dir", default="logs", type=Path)
     parser.add_argument(
         "--num_rep", help="Number of search repetitions", default=5, type=int
     )
@@ -329,8 +316,7 @@ def main(argv: str | None = None) -> None:
         search_window_sizes=args.search_window_size,
         recall=args.recall,
         count=args.k,
-        compress=not args.idx_like_loader,
-        logger=logger,
+        compress=args.idx_not_compressed,
         leanvec_dims=args.leanvec_dims,
         leanvec_alignment=args.leanvec_alignment,
         search_buffer_capacities=args.search_buffer_capacity,

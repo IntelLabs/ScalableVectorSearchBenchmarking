@@ -18,5 +18,6 @@ header:
     - "README.md"
     - "requirements.txt"
     - "SECURITY.md"
+    - "uv.lock"
 
   comment: never
