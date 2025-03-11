@@ -11,7 +11,7 @@ dependencies = [
     "hnswlib>=0.8.0",
     "numpy>=1.10",
     "pandas>=2",
-    "scalable-vs>=0.0.6",
+    "scalable-vs>=0.0.7",
     "tqdm>=4.67",
 ]
 classifiers = ["Private :: Do Not Upload"]
