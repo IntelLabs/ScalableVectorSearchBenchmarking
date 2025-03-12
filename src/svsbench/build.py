@@ -77,6 +77,14 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--static", help="Index is static", action="store_true"
     )
+    parser.add_argument(
+        "--convert_vecs",
+        help="Convert data type of vecs file to the SVS type",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--tmp_dir", help="Temporary dir", type=Path, default="/dev/shm"
+    )
     return parser.parse_args(argv)
 
 
@@ -121,6 +129,8 @@ def main(argv: str | None = None) -> None:
             max_threads_ignore_batch=args.max_threads_ignore_batch,
             shuffle=args.shuffle,
             seed=args.seed,
+            convert_vecs=args.convert_vecs,
+            tmp_dir=args.tmp_dir,
         )
         np.save(args.out_dir / (name + ".ingest.npy"), ingest_time)
         if args.num_vectors_delete > 0:
@@ -149,12 +159,28 @@ def build_dynamic(
     max_threads_ignore_batch: bool = False,
     shuffle: bool = False,
     seed: int = 42,
+    convert_vecs: bool = False,
+    tmp_dir: Path = Path("/dev/shm"),
 ) -> tuple[svs.DynamicVamana, str]:
     """Build SVS index."""
     logger.info({"build_args": locals()})
     logger.info(utils.read_system_config())
 
+    if (vecs_type := consts.SUFFIX_TO_SVS_TYPE.get(vecs_path.suffix)) is None:
+        raise ValueError("Unknown suffix: " + vecs_path.suffix)
+    if svs_type.startswith("float") and vecs_type != svs_type:
+        if not convert_vecs:
+            raise ValueError(
+                f"Expected svs_type={vecs_type} for {vecs_path=!s}"
+                f" based on suffix but got {svs_type=!s}."
+                f" You can also use convert_vecs."
+            )
+        conversion_necessary = True
+    else:
+        conversion_necessary = False
     vectors = svs.read_vecs(str(vecs_path))
+    if conversion_necessary:
+        vectors = vectors.astype(consts.SVS_TYPE_TO_DTYPE[svs_type])
 
     if num_vectors is None:
         num_vectors = vectors.shape[0]
@@ -196,21 +222,29 @@ def build_dynamic(
             max_candidate_pool_size=max_candidate_pool_size,
         )
 
-        start = time.perf_counter()
-        index = svs.DynamicVamana.build(
-            parameters,
-            vectors[:num_vectors_init],
-            vector_ids[:num_vectors_init],
-            distance,
-            num_threads=max_threads_init,
-        )
-        index_build_time = time.perf_counter() - start
+        if svs_type.startswith(("float32", "leanvec", "lvq")):
+            start = time.perf_counter()
+            index = svs.DynamicVamana.build(
+                parameters,
+                vectors[:num_vectors_init],
+                vector_ids[:num_vectors_init],
+                distance,
+                num_threads=max_threads_init,
+            )
+            index_build_time = time.perf_counter() - start
+        else:
+            start = time.perf_counter()
+            index = svs.Vamana.build(
+                parameters,
+                vectors[:num_vectors_init],
+                distance,
+                num_threads=max_threads_init,
+            )
+            index_build_time = time.perf_counter() - start
         logger.info({"index_build_time": index_build_time})
         ingest_time[0] = index_build_time
-        if svs_type.startswith(("leanvec", "lvq")):
-            with tempfile.TemporaryDirectory(
-                dir="/dev/shm"
-            ) as tmp_idx_dir_str:
+        if svs_type != "float32":
+            with tempfile.TemporaryDirectory(dir=tmp_dir) as tmp_idx_dir_str:
                 tmp_idx_dir = Path(tmp_idx_dir_str)
                 index.save(
                     str(tmp_idx_dir / "config"),
@@ -218,7 +252,9 @@ def build_dynamic(
                     str(tmp_idx_dir / "data"),
                 )
                 loader = create_loader(
-                    svs_type, data_dir=tmp_idx_dir / "data", compress=True
+                    svs_type,
+                    data_dir=tmp_idx_dir / "data",
+                    compress=not svs_type.startswith("float"),
                 )
                 index = svs.DynamicVamana(
                     str(tmp_idx_dir / "config"),
@@ -226,6 +262,7 @@ def build_dynamic(
                     loader,
                     distance=distance,
                     num_threads=max_threads_init,
+                    debug_load_from_static=svs_type.startswith("float"),
                 )
     else:
         loader = create_loader(svs_type, data_dir=idx_dir / "data")

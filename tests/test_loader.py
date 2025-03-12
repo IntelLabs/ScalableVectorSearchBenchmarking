@@ -53,10 +53,13 @@ def test_create_loader_with_vecs_path(tmp_vecs):
     assert isinstance(loader, svs.VectorDataLoader)
 
 
-def test_create_loader_with_mismatched_vecs_path(tmp_fvecs):
-    with pytest.raises(ValueError, match="Expected svs_type="):
-        create_loader("float16", vecs_path=tmp_fvecs)
-
+def test_create_loader_type_mismatch(tmp_vecs):
+    vecs_type = SUFFIX_TO_SVS_TYPE[tmp_vecs.suffix]
+    for svs_type in SUFFIX_TO_SVS_TYPE.values():
+        if svs_type != vecs_type:
+            break
+    with pytest.raises(ValueError, match="Expected svs_type"):
+        create_loader(vecs_path=tmp_vecs, svs_type=svs_type)
 
 def test_create_loader_with_invalid_vecs_path():
     with pytest.raises(ValueError, match="Unknown suffix"):

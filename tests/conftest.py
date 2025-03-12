@@ -8,12 +8,7 @@ import numpy as np
 import pytest
 import svs
 
-import svsbench.consts
-
-SVS_TYPE_TO_DTYPE: Final = {
-    "float16": np.float16,
-    "float32": np.float32,
-}
+from svsbench import consts
 
 INT_TO_LEANVEC_KIND: Final = {
     4: svs.LeanVecKind.lvq4,
@@ -30,22 +25,15 @@ def random_array(dtype: np.dtype) -> np.ndarray:
         return rng.random((1000, 100)).astype(dtype)
 
 
-@pytest.fixture(scope="session")
-def tmp_fvecs(tmp_path_factory):
-    fvecs_path = tmp_path_factory.mktemp("fvecs") / "random.fvecs"
-    svs.write_vecs(random_array(np.float32), str(fvecs_path))
-    return fvecs_path
-
-
 @pytest.fixture(
-    scope="session", params=svsbench.consts.SUFFIX_TO_SVS_TYPE.keys()
+    scope="session", params=consts.SUFFIX_TO_SVS_TYPE.keys()
 )
 def tmp_vecs(request, tmp_path_factory):
     suffix = request.param
     vecs_path = tmp_path_factory.mktemp("vecs") / ("random" + suffix)
     svs.write_vecs(
         random_array(
-            SVS_TYPE_TO_DTYPE[svsbench.consts.SUFFIX_TO_SVS_TYPE[suffix]]
+            consts.SVS_TYPE_TO_DTYPE[consts.SUFFIX_TO_SVS_TYPE[suffix]]
         ),
         str(vecs_path),
     )
@@ -60,7 +48,7 @@ def tmp_vecs(request, tmp_path_factory):
         )
         if svs_type in ("lvq8x8",) and dynamic
         else (svs_type, dynamic)
-        for svs_type in svsbench.consts.SVS_TYPES
+        for svs_type in consts.SVS_TYPES
         for dynamic in (True, False)
     ],
     ids=lambda x: str(x),
@@ -75,7 +63,7 @@ def index_dir_with_svs_type_and_dynamic(request, tmp_path_factory):
         graph_max_degree=16,
         window_size=10,
     )
-    array = random_array(SVS_TYPE_TO_DTYPE[data_type_initial])
+    array = random_array(consts.SVS_TYPE_TO_DTYPE[data_type_initial])
     if dynamic:
         index_class = svs.DynamicVamana
         index_initial = svs.DynamicVamana.build(

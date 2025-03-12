@@ -101,7 +101,7 @@ def create_loader(
         if vecs_path is not None and vecs_type != svs_type:
             raise ValueError(
                 f"Expected svs_type={vecs_type} for {vecs_path=!s}"
-                f" based on suffix but got {svs_type=}"
+                f" based on suffix but got {svs_type=!s}"
             )
         loader = loader_or_str
     return loader

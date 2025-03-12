@@ -4,6 +4,7 @@
 
 from typing import Final
 
+import numpy as np
 import svs
 
 DISTANCE_TO_ALPHA: Final[dict[svs.DistanceType, float]] = {
@@ -43,6 +44,11 @@ SVS_TYPES: Final = (
     "lvq4x4",
     "lvq4x8",
 )
+
+SVS_TYPE_TO_DTYPE: Final = {
+    "float16": np.float16,
+    "float32": np.float32,
+}
 
 STR_TO_DATA_TYPE: Final = {
     "float16": svs.DataType.float16,
