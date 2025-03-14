@@ -12,7 +12,7 @@ import hnswlib
 import numpy as np
 from tqdm import tqdm
 
-import utils
+from . import utils
 
 EF_DEFAULT: Final = (175, 200, 225)
 
@@ -26,7 +26,7 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--max_threads", help="Maximum number of threads", default=max(len(os.sched_getaffinity(0)) - 1, 1), type=int)
     parser.add_argument("--idx_file", help="Index file", type=Path)
     parser.add_argument("--ground_truth_file", help="Ground truth file", type=Path)
-    parser.add_argument("--query_file", help="Query file", type=Path, default="ebay/queries.fvecs")
+    parser.add_argument("--query_file", help="Query file", type=Path)
     parser.add_argument("-k", help="Number of neighbors to return", default=10, type=int)
     parser.add_argument("--num_rep", help="Number of search repetitions", default=5, type=int)
     parser.add_argument("--ef", help="ef", action="append", type=int)
@@ -75,7 +75,7 @@ def search(
     ground_truth_file: Path,
     k: int = 10,
     num_rep: int = 5,
-    query_file: Path = Path("ebay/queries.fvecs"),
+    query_file: Path,
     efs: list[int],
     distance: str = "ip",
 ) -> None:
