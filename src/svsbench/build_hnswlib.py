@@ -5,7 +5,7 @@ from pathlib import Path
 import hnswlib
 import numpy as np
 
-import merge
+from . import merge
 
 def ivecs_mmap(fname):
     a = np.memmap(fname, dtype='int32', mode='r')
@@ -32,7 +32,7 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--out_dir",
         help="Output dir where SVS index dir will be created",
         type=Path,
-        default="ebay",
+        default="out",
     )
     parser.add_argument(
         "--num_threads",
@@ -76,6 +76,7 @@ def build(*, vecs_path: Path, out_path: Path, num_threads: int, distance: str, e
     p.set_num_threads(num_threads)
     p.add_items(X_db, ids)
     p.save_index(f"{out_path}/{Path(vecs_path).stem}-{num_vectors}_M{m}_{ef_construction}_hnswlib.bin")
+    print(f"{out_path}/{Path(vecs_path).stem}-{num_vectors}_M{m}_{ef_construction}_hnswlib.bin")
 
 
 if __name__ == "__main__":
