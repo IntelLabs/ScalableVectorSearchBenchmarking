@@ -85,6 +85,9 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--tmp_dir", help="Temporary dir", type=Path, default="/dev/shm"
     )
+    parser.add_argument(
+        "--leanvec_dims", help="LeanVec dimensionality", type=int
+    )
     return parser.parse_args(argv)
 
 
@@ -107,6 +110,7 @@ def main(argv: str | None = None) -> None:
             max_candidate_pool_size=args.max_candidate_pool_size,
             alpha=args.alpha,
             max_threads=args.max_threads,
+            leanvec_dims=args.leanvec_dims,
         )
     else:
         index, name, ingest_time, delete_time = build_dynamic(
@@ -131,6 +135,7 @@ def main(argv: str | None = None) -> None:
             seed=args.seed,
             convert_vecs=args.convert_vecs,
             tmp_dir=args.tmp_dir,
+            leanvec_dims=args.leanvec_dims,
         )
         np.save(args.out_dir / (name + ".ingest.npy"), ingest_time)
         if args.num_vectors_delete > 0:
@@ -161,6 +166,7 @@ def build_dynamic(
     seed: int = 42,
     convert_vecs: bool = False,
     tmp_dir: Path = Path("/dev/shm"),
+    leanvec_dims: int | None = None,
 ) -> tuple[svs.DynamicVamana, str]:
     """Build SVS index."""
     logger.info({"build_args": locals()})
@@ -255,6 +261,7 @@ def build_dynamic(
                     svs_type,
                     data_dir=tmp_idx_dir / "data",
                     compress=not svs_type.startswith("float"),
+                    leanvec_dims=leanvec_dims,
                 )
                 index = svs.DynamicVamana(
                     str(tmp_idx_dir / "config"),
@@ -325,6 +332,7 @@ def build_static(
     max_candidate_pool_size: int = 750,
     alpha: float | None = None,
     max_threads: int = 1,
+    leanvec_dims: int | None = None,
 ) -> tuple[svs.Vamana, str]:
     logger.info({"build_args": locals()})
     logger.info(utils.read_system_config())
@@ -341,7 +349,9 @@ def build_static(
     start = time.perf_counter()
     index = svs.Vamana.build(
         parameters,
-        create_loader(svs_type, vecs_path=vecs_path),
+        create_loader(
+            svs_type, vecs_path=vecs_path, leanvec_dims=leanvec_dims
+        ),
         distance,
         num_threads=max_threads,
     )
