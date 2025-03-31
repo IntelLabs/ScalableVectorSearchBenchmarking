@@ -3,7 +3,18 @@
 ![GitHub License](https://img.shields.io/github/license/IntelLabs/ScalableVectorSearchBenchmarking)
 ![python-support](https://img.shields.io/badge/Python-3.12-3?logo=python)
 
-## Use
+Scalable Vector Search Benchmarking enables the benchmarking or evaluation of the [Scalable Vector Search](https://github.com/intel/ScalableVectorSearch) library.
+
+## Installation
+
+Requires Python >= 3.12.
+
+```sh
+python -m pip install \
+    git+https://github.com/IntelLabs/ScalableVectorSearchBenchmarking
+```
+
+## Usage
 
 ### Building an index
 
