@@ -8,9 +8,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "hnswlib>=0.8.0",
     "numpy>=1.10",
-    "pandas>=2",
     "scalable-vs>=0.0.7",
     "tqdm>=4.67",
 ]

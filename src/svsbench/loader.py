@@ -15,7 +15,7 @@ def create_loader(
     vecs_path: Path = None,
     data_dir: Path = None,
     compress: bool = False,
-    leanvec_dims: int = -4,
+    leanvec_dims: int | None = None,
     leanvec_alignment: int = 32,
 ) -> svs.VectorDataLoader | svs.LVQLoader | svs.LeanVecLoader:
     """Create loader."""
@@ -84,6 +84,8 @@ def create_loader(
         else:
             raise ValueError(unkown_msg)
         if vecs_path is not None or compress:
+            if leanvec_dims is None:
+                leanvec_dims = -4
             if leanvec_dims < 0:
                 leanvec_dims = loader_or_str.dims // -leanvec_dims
             loader = svs.LeanVecLoader(
