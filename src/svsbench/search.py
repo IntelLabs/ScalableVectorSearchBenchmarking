@@ -53,6 +53,11 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--ground_truth_file", help="Ground truth ivecs file", type=Path
     )
     parser.add_argument(
+        "--calibration_ground_truth_file",
+        help="Calibration ground truth ivecs file",
+        type=Path,
+    )
+    parser.add_argument(
         "--strategy",
         help="LVQ strategy",
         choices=tuple(STR_TO_STRATEGY.keys()),
@@ -144,6 +149,7 @@ def search(
     distance: svs.DistanceType,
     query_type: svs.DataType = svs.DataType.float32,
     calibration_query_path: Path | None = None,
+    calibration_ground_truth_path: Path | None = None,
     load_from_static: bool = False,
 ):
     logger.info({"search_args": locals()})
@@ -198,13 +204,20 @@ def search(
     for batch_size_idx, batch_size in enumerate(batch_sizes):
         index.num_threads = min(max_threads, batch_size)
         if search_window_sizes is None:
-            calibration_query = (
-                svs.read_vecs(str(calibration_query_path))
-                if calibration_query_path is not None
-                else query
-            )
+            if calibration_query_path is None:
+                calibration_query = svs.read_vecs(str(calibration_query_path))
+                if calibration_ground_truth_path is None:
+                    raise ValueError(
+                        "Calibration ground truth is required when calibration query is provided"
+                    )
+                calibration_ground_truth = svs.read_vecs(
+                    str(calibration_ground_truth_path)
+                )
+            else:
+                calibration_query = query
+                calibration_ground_truth = ground_truth
             index.experimental_calibrate(
-                calibration_query, ground_truth, count, recall
+                calibration_query, calibration_ground_truth, count, recall
             )
             logger.info(
                 {
@@ -327,6 +340,7 @@ def main(argv: str | None = None) -> None:
         distance=args.distance,
         query_type=args.query_type,
         calibration_query_path=args.calibration_query_file,
+        calibration_ground_truth_path=args.calibration_ground_truth_file,
         load_from_static=args.load_from_static,
     )
 
