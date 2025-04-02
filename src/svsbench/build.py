@@ -42,7 +42,6 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--distance",
         choices=tuple(consts.STR_TO_DISTANCE.keys()),
         default="mip",
-        type=consts.STR_TO_DISTANCE.get,
     )
     parser.add_argument(
         "--max_threads_init",
@@ -103,7 +102,7 @@ def main(argv: str | None = None) -> None:
         index, name = build_static(
             vecs_path=args.vecs_file,
             svs_type=args.svs_type,
-            distance=args.distance,
+            distance=consts.STR_TO_DISTANCE[args.distance],
             graph_max_degree=args.graph_max_degree,
             window_size=args.window_size,
             prune_to=args.prune_to,
