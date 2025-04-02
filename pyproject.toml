@@ -12,7 +12,6 @@ dependencies = [
     "scalable-vs>=0.0.7",
     "tqdm>=4.67",
 ]
-classifiers = ["Private :: Do Not Upload"]
 
 [build-system]
 requires = ["hatchling"]
