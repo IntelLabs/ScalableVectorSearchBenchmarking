@@ -204,7 +204,7 @@ def search(
     for batch_size_idx, batch_size in enumerate(batch_sizes):
         index.num_threads = min(max_threads, batch_size)
         if search_window_sizes is None:
-            if calibration_query_path is None:
+            if calibration_query_path is not None:
                 calibration_query = svs.read_vecs(str(calibration_query_path))
                 if calibration_ground_truth_path is None:
                     raise ValueError(
