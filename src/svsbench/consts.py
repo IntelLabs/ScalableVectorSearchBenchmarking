@@ -54,3 +54,9 @@ STR_TO_DATA_TYPE: Final = {
     "float16": svs.DataType.float16,
     "float32": svs.DataType.float32,
 }
+
+STR_TO_LVQ_STRATEGY: Final[dict[str, svs.LVQStrategy]] = {
+    "auto": svs.LVQStrategy.Auto,
+    "sequential": svs.LVQStrategy.Sequential,
+    "turbo": svs.LVQStrategy.Turbo,
+}

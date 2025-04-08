@@ -7,7 +7,6 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import Final
 
 import numpy as np
 import svs
@@ -15,13 +14,6 @@ from tqdm import tqdm
 
 from . import consts, utils
 from .loader import create_loader
-
-STR_TO_STRATEGY: Final[dict[str, svs.LVQStrategy]] = {
-    "auto": svs.LVQStrategy.Auto,
-    "sequential": svs.LVQStrategy.Sequential,
-    "turbo": svs.LVQStrategy.Turbo,
-}
-
 
 logger = logging.getLogger(__file__)
 
@@ -38,7 +30,6 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Query type",
         choices=consts.STR_TO_DATA_TYPE.keys(),
         default="float32",
-        type=consts.STR_TO_DATA_TYPE.get,
     )
     parser.add_argument("--idx_dir", help="Index dir", type=Path)
     parser.add_argument("--data_dir", help="Data dir", type=Path)
@@ -58,11 +49,10 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=Path,
     )
     parser.add_argument(
-        "--strategy",
+        "--lvq_strategy",
         help="LVQ strategy",
-        choices=tuple(STR_TO_STRATEGY.keys()),
+        choices=tuple(consts.STR_TO_LVQ_STRATEGY.keys()),
         default="auto",
-        type=STR_TO_STRATEGY.get,
     )
     parser.add_argument(
         "--leanvec_dims", help="LeanVec dimensionality", default=-4, type=int
@@ -115,7 +105,6 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--distance",
         choices=tuple(consts.STR_TO_DISTANCE.keys()),
         default="mip",
-        type=consts.STR_TO_DISTANCE.get,
     )
     parser.add_argument(
         "--load_from_static",
@@ -151,6 +140,7 @@ def search(
     calibration_query_path: Path | None = None,
     calibration_ground_truth_path: Path | None = None,
     load_from_static: bool = False,
+    lvq_strategy: svs.LVQStrategy | None = None,
 ):
     logger.info({"search_args": locals()})
     logger.info(utils.read_system_config())
@@ -178,6 +168,7 @@ def search(
         compress=compress,
         leanvec_dims=leanvec_dims,
         leanvec_alignment=leanvec_alignment,
+        lvq_strategy=lvq_strategy,
     )
 
     if static:
@@ -337,11 +328,12 @@ def main(argv: str | None = None) -> None:
         prefetch_steps=args.prefetch_step,
         num_rep=args.num_rep,
         static=args.static,
-        distance=args.distance,
-        query_type=args.query_type,
+        distance=consts.STR_TO_DISTANCE[args.distance],
+        query_type=consts.STR_TO_DATA_TYPE[args.query_type],
         calibration_query_path=args.calibration_query_file,
         calibration_ground_truth_path=args.calibration_ground_truth_file,
         load_from_static=args.load_from_static,
+        lvq_strategy=consts.STR_TO_LVQ_STRATEGY.get(args.lvq_strategy, None),
     )
 
 

@@ -17,6 +17,7 @@ def create_loader(
     compress: bool = False,
     leanvec_dims: int | None = None,
     leanvec_alignment: int = 32,
+    lvq_strategy: svs.LVQStrategy | None = None,
 ) -> svs.VectorDataLoader | svs.LVQLoader | svs.LeanVecLoader:
     """Create loader."""
     unkown_msg = f"Unknown {svs_type=}"
@@ -47,17 +48,20 @@ def create_loader(
         if svs_type == "lvq4x4":
             primary = 4
             residual = 4
-            strategy = svs.LVQStrategy.Turbo
+            default_strategy = svs.LVQStrategy.Turbo
         elif svs_type == "lvq4x8":
             primary = 4
             residual = 8
-            strategy = svs.LVQStrategy.Turbo
+            default_strategy = svs.LVQStrategy.Turbo
         elif svs_type == "lvq8":
             primary = 8
             residual = 0
-            strategy = svs.LVQStrategy.Sequential
+            default_strategy = svs.LVQStrategy.Sequential
         else:
             raise ValueError(unkown_msg)
+        strategy = (
+            lvq_strategy if lvq_strategy is not None else default_strategy
+        )
         padding = 32
         if vecs_path is not None or compress:
             loader = svs.LVQLoader(
