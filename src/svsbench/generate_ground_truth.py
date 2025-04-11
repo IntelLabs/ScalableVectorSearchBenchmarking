@@ -27,7 +27,6 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--distance",
         help="Distance",
         choices=tuple(consts.STR_TO_DISTANCE.keys()),
-        type=consts.STR_TO_DISTANCE.get,
         default="mip",
     )
     parser.add_argument(
@@ -50,7 +49,7 @@ def main(argv: str | None = None) -> None:
     generate_ground_truth(
         vecs_path=args.vecs_file,
         query_file=args.query_file,
-        distance=args.distance,
+        distance=consts.STR_TO_DISTANCE[args.distance],
         num_vectors=args.num_vectors,
         k=args.k,
         num_threads=args.max_threads,
