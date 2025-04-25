@@ -87,6 +87,7 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--leanvec_dims", help="LeanVec dimensionality", type=int
     )
+    parser.add_argument("--no_save", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -139,7 +140,8 @@ def main(argv: str | None = None) -> None:
         np.save(args.out_dir / (name + ".ingest.npy"), ingest_time)
         if args.num_vectors_delete > 0:
             np.save(args.out_dir / (name + ".delete"), delete_time)
-    save(index, args.out_dir, name)
+    if not args.no_save:
+        save(index, args.out_dir, name)
 
 
 def build_dynamic(
@@ -301,6 +303,14 @@ def build_dynamic(
             start = time.perf_counter()
             index.delete(ids_to_delete)
             delete_time[batch_idx + 1] = time.perf_counter() - start
+    if num_batches:
+        add_time_mean = np.mean(ingest_time[1:])
+        add_time_rsd = (
+            np.std(ingest_time[1:], ddof=min(1, num_batches - 1))
+            / add_time_mean
+        )
+        logger.info({"add_time": {"mean": add_time_mean, "rsd": add_time_rsd}})
+        logger.info({"build_and_add_time": np.sum(ingest_time)})
 
     name = "__".join(
         (

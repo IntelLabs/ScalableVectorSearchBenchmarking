@@ -284,7 +284,11 @@ def search(
             {
                 "search_results": {
                     "qps": qps,
+                    "qps_mean": np.mean(qps),
+                    "qps_rsd": np.std(qps, ddof=min(1, num_rep - 1)) / np.mean(qps),
                     "p95": p95s,
+                    "p95_mean": np.mean(p95s),
+                    "p95_rsd": np.std(p95s, ddof=min(1, num_rep - 1)) / np.mean(p95s),
                     "search_parameters": {
                         "search_window_size": index.search_parameters.buffer_config.search_window_size,
                         "search_buffer_capacity": index.search_parameters.buffer_config.search_buffer_capacity,
