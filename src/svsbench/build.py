@@ -45,8 +45,7 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--max_threads_init",
-        help="Maximum number of threads for the first operation",
-        default=max(len(os.sched_getaffinity(0)) - 1, 1),
+        help="Maximum number of threads for building the initial graph",
         type=int,
     )
     parser.add_argument(
@@ -157,7 +156,7 @@ def build_dynamic(
     max_candidate_pool_size: int = 750,
     alpha: float | None = None,
     max_threads: int = 1,
-    max_threads_init: int = 1,
+    max_threads_init: int | None = None,
     batch_size: int = 10000,
     num_vectors_delete: int = 0,
     num_vectors_init: int | None = None,
@@ -202,6 +201,8 @@ def build_dynamic(
             num_vectors_init = batch_size
         else:
             num_vectors_init = int(num_vectors * proportion_vectors_init)
+    if max_threads_init is None:
+        max_threads_init = max_threads
     if not max_threads_ignore_batch:
         max_threads = min(max_threads, batch_size)
         max_threads_init = min(max_threads_init, num_vectors_init)
