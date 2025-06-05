@@ -24,6 +24,11 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--query_file", help="Query vectors file", type=Path)
     parser.add_argument("--out_file", help="Output file", type=Path)
     parser.add_argument(
+        "--query_out_file",
+        help="Output file for query vectors generated when num_queries given",
+        type=Path,
+    )
+    parser.add_argument(
         "--distance",
         help="Distance",
         choices=tuple(consts.STR_TO_DISTANCE.keys()),
@@ -33,6 +38,14 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         "-k", help="Number of neighbors", type=int, default=100
     )
     parser.add_argument("--num_vectors", help="Number of vectors", type=int)
+    parser.add_argument(
+        "--num_query_vectors",
+        help="Number of query vectors."
+        " If given, query vectors will be shuffled."
+        " If more than in the query file, the query vectors will be shuffled"
+        " and repeated as needed.",
+        type=int,
+    )
     parser.add_argument(
         "--shuffle", help="Shuffle order of vectors", action="store_true"
     )
@@ -54,8 +67,10 @@ def main(argv: str | None = None) -> None:
         k=args.k,
         num_threads=args.max_threads,
         out_file=args.out_file,
+        query_out_path=args.query_out_file,
         shuffle=args.shuffle,
         seed=args.seed,
+        num_query_vectors=args.num_query_vectors,
     )
 
 
@@ -64,31 +79,72 @@ def generate_ground_truth(
     vecs_path: Path,
     query_file: Path,
     distance: svs.DistanceType,
-    num_vectors: int | None,
+    num_vectors: int | None = None,
     k: int = 100,
     num_threads: int = 1,
     out_file: Path | None = None,
+    query_out_path: Path | None = None,
     shuffle: bool = False,
     seed: int = 42,
+    num_query_vectors: int | None = None,
 ) -> None:
-    if out_file is None:
-        out_file = utils.ground_truth_path(
-            vecs_path, query_file, distance, num_vectors, seed if shuffle else None,
+    if out_file is not None and out_file.suffix != ".ivecs":
+        raise SystemExit("Error: --out_file must end in .ivecs")
+    if (
+        query_out_path is not None
+        and query_out_path.suffix != query_file.suffix
+    ):
+        raise SystemExit(
+            "Error: --query_out_path must have the same suffix as --query_file"
         )
-    else:
-        if out_file.suffix != ".ivecs":
-            raise SystemExit("Error: --out_file must end in .ivecs")
-        out_file = str(out_file)
     queries = svs.read_vecs(str(query_file))
     vectors = svs.read_vecs(str(vecs_path))
-    if num_vectors is None:
-        num_vectors = vectors.shape[0]
+    # If num_vectors is None or larger than the number of vectors,
+    # slicing will return the whole array.
     vectors = vectors[:num_vectors]
     if shuffle:
-        vectors = vectors[np.random.default_rng(seed).permutation(num_vectors)]
+        np.random.default_rng(seed).shuffle(vectors)
     index = svs.Flat(vectors, distance=distance, num_threads=num_threads)
     idxs, _ = index.search(queries, k)
-    svs.write_vecs(idxs.astype(np.uint32), out_file)
+    if num_query_vectors is not None:
+        queries_all = np.empty_like(
+            queries, shape=(num_query_vectors, queries.shape[1])
+        )
+        ground_truth_all = np.empty_like(
+            idxs, shape=(num_query_vectors, idxs.shape[1])
+        )
+        rng = np.random.default_rng(seed)
+        cursor = 0
+        while cursor < num_query_vectors:
+            permutation = rng.permutation(len(queries))
+            batch_size = min(num_query_vectors - cursor, len(queries))
+            queries_all[cursor : cursor + batch_size] = queries[
+                permutation[:batch_size]
+            ]
+            ground_truth_all[cursor : cursor + batch_size] = idxs[
+                permutation[:batch_size]
+            ]
+            cursor += batch_size
+        if query_out_path is None:
+            query_out_path = (
+                query_file.parent
+                / f"{query_file.stem}-{num_query_vectors}_{seed}"
+                f"{query_file.suffix}"
+            )
+        svs.write_vecs(queries_all, str(query_out_path))
+        queries_path = query_out_path
+    else:
+        queries_path = query_file
+        ground_truth_all = idxs
+    if out_file is None:
+        out_file = utils.ground_truth_path(
+            vecs_path,
+            queries_path,
+            distance,
+            num_vectors,
+            seed if shuffle else None,
+        )
+    svs.write_vecs(ground_truth_all.astype(np.uint32), str(out_file))
     logger.info({"ground_truth_saved": out_file})
 
 
