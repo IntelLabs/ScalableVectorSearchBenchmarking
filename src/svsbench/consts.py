@@ -7,6 +7,9 @@ from typing import Final
 import numpy as np
 import svs
 
+DEFAULT_LEANVEC_DIMS: Final[int] = -4
+DEFAULT_LEANVEC_TRAIN_MAX_VECTORS: Final[int] = 100_000
+
 DISTANCE_TO_ALPHA: Final[dict[svs.DistanceType, float]] = {
     svs.DistanceType.Cosine: 0.95,
     svs.DistanceType.L2: 1.2,

@@ -25,6 +25,15 @@ python -m svsbench.build \
     --proportion_vectors_init 0.5 --batch_size 10000
 ```
 
+#### Building a LeanVec-OOD index
+
+```sh
+python -m svsbench.build \
+    --vecs_file /path/to/vectors.fvecs \
+    --svs_type leanvec4x8 \
+    --train_query_file /path/to/train_query_vectors.fvecs
+```
+
 ### Computing the ground truth
 
 For the query vectors used in performance measurements:

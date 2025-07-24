@@ -34,12 +34,12 @@ def _read_dim(fname: Path) -> int:
     return dim
 
 
-def read_vecs(fname: Path) -> npt.NDArray:
+def read_vecs(fname: Path, max_vectors: int | None = None) -> npt.NDArray:
     """Create NumPy memory maps."""
     dim = _read_dim(fname)
     padding = SUFFIX_TO_PADDING[fname.suffix]
     array = np.memmap(fname, dtype=SUFFIX_TO_DTYPE[fname.suffix], mode="r")
-    return array.reshape(-1, dim + padding)[:, padding:]
+    return array.reshape(-1, dim + padding)[:max_vectors, padding:]
 
 
 def write(inputs: list[Path], output: Path, num_vectors: int | None) -> None:

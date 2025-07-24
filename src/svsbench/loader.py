@@ -4,6 +4,7 @@
 
 from pathlib import Path
 
+import numpy.typing as npt
 import svs
 
 from . import consts
@@ -18,6 +19,8 @@ def create_loader(
     leanvec_dims: int | None = None,
     leanvec_alignment: int = 32,
     lvq_strategy: svs.LVQStrategy | None = None,
+    data_matrix: npt.NDArray | None = None,
+    query_matrix: npt.NDArray | None = None,
 ) -> svs.VectorDataLoader | svs.LVQLoader | svs.LeanVecLoader:
     """Create loader."""
     unkown_msg = f"Unknown {svs_type=}"
@@ -89,7 +92,7 @@ def create_loader(
             raise ValueError(unkown_msg)
         if vecs_path is not None or compress:
             if leanvec_dims is None:
-                leanvec_dims = -4
+                leanvec_dims = consts.DEFAULT_LEANVEC_DIMS
             if leanvec_dims < 0:
                 leanvec_dims = loader_or_str.dims // -leanvec_dims
             loader = svs.LeanVecLoader(
@@ -98,6 +101,8 @@ def create_loader(
                 primary_kind=primary,
                 secondary_kind=secondary,
                 alignment=leanvec_alignment,
+                data_matrix=data_matrix,
+                query_matrix=query_matrix,
             )
         else:
             loader = svs.LeanVecLoader(

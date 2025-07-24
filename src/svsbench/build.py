@@ -4,19 +4,22 @@
 
 import argparse
 import logging
-import os
 import sys
 import tempfile
 import time
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 import svs
 from tqdm import tqdm
 
-from . import consts
+from . import consts, utils
+from .generate_leanvec_matrices import (
+    generate_leanvec_matrices,
+    save_leanvec_matrices,
+)
 from .loader import create_loader
-from . import utils
 
 logger = logging.getLogger(__file__)
 
@@ -86,11 +89,40 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--leanvec_dims", help="LeanVec dimensionality", type=int
     )
-    parser.add_argument("--no_save", action="store_true")
+    parser.add_argument(
+        "--no_save", action="store_true", help="Do not save built index"
+    )
+    parser.add_argument(
+        "--train_query_file",
+        help="Query *vecs file for LeanVec out-of-distribution training",
+        type=Path,
+    )
+    parser.add_argument(
+        "--train_max_vectors",
+        help="Maximum number of base vectors from vecs_file"
+        " to use for LeanVec out-of-distribution training (0 for all)",
+        type=int,
+        default=consts.DEFAULT_LEANVEC_TRAIN_MAX_VECTORS,
+    )
+    parser.add_argument(
+        "--no_save_matrices",
+        action="store_true",
+        help="Do not save LeanVec matrices",
+    )
+    parser.add_argument(
+        "--data_matrix_file",
+        help="Data matrix npy file for LeanVec",
+        type=Path,
+    )
+    parser.add_argument(
+        "--query_matrix_file",
+        help="Query matrix npy file for LeanVec",
+        type=Path,
+    )
     return parser.parse_args(argv)
 
 
-def main(argv: str | None = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     args = _read_args(argv)
     log_file = utils.configure_logger(
         logger, args.log_dir if args.log_dir is not None else args.out_dir
@@ -98,6 +130,42 @@ def main(argv: str | None = None) -> None:
     print("Logging to", log_file, sep="\n")
     logger.info({"argv": argv if argv else sys.argv})
     args.out_dir.mkdir(exist_ok=True)
+    if args.data_matrix_file is not None:
+        if args.query_matrix_file is None:
+            raise ValueError(
+                "query_matrix_file must be provided with data_matrix_file"
+            )
+        data_matrix = np.load(args.data_matrix_file)
+        query_matrix = np.load(args.query_matrix_file)
+    elif args.train_query_file is not None:
+        (data_matrix, query_matrix), (leanvec_dims_effective, _) = (
+            generate_leanvec_matrices(
+                args.vecs_file,
+                args.train_query_file,
+                args.train_max_vectors,
+                args.leanvec_dims,
+            )
+        )
+        if not args.no_save_matrices:
+            data_matrix_path, query_matrix_path = save_leanvec_matrices(
+                args.vecs_file,
+                args.train_query_file,
+                args.train_max_vectors,
+                leanvec_dims_effective,
+                data_matrix,
+                query_matrix,
+                args.out_dir,
+            )
+            logger.info(
+                {
+                    "saved_leanvec_matrices": (
+                        data_matrix_path,
+                        query_matrix_path,
+                    )
+                }
+            )
+    else:
+        data_matrix = query_matrix = None
     if args.static:
         index, name = build_static(
             vecs_path=args.vecs_file,
@@ -110,6 +178,8 @@ def main(argv: str | None = None) -> None:
             alpha=args.alpha,
             max_threads=args.max_threads,
             leanvec_dims=args.leanvec_dims,
+            data_matrix=data_matrix,
+            query_matrix=query_matrix,
         )
     else:
         index, name, ingest_time, delete_time = build_dynamic(
@@ -135,6 +205,8 @@ def main(argv: str | None = None) -> None:
             convert_vecs=args.convert_vecs,
             tmp_dir=args.tmp_dir,
             leanvec_dims=args.leanvec_dims,
+            data_matrix=data_matrix,
+            query_matrix=query_matrix,
         )
         np.save(args.out_dir / (name + ".ingest.npy"), ingest_time)
         if args.num_vectors_delete > 0:
@@ -167,6 +239,8 @@ def build_dynamic(
     convert_vecs: bool = False,
     tmp_dir: Path = Path("/dev/shm"),
     leanvec_dims: int | None = None,
+    data_matrix: npt.NDArray | None = None,
+    query_matrix: npt.NDArray | None = None,
 ) -> tuple[svs.DynamicVamana, str]:
     """Build SVS index."""
     logger.info({"build_args": locals()})
@@ -264,6 +338,8 @@ def build_dynamic(
                     data_dir=tmp_idx_dir / "data",
                     compress=not svs_type.startswith("float"),
                     leanvec_dims=leanvec_dims,
+                    data_matrix=data_matrix,
+                    query_matrix=query_matrix,
                 )
                 index = svs.DynamicVamana(
                     str(tmp_idx_dir / "config"),
@@ -343,6 +419,8 @@ def build_static(
     alpha: float | None = None,
     max_threads: int = 1,
     leanvec_dims: int | None = None,
+    data_matrix: npt.NDArray | None = None,
+    query_matrix: npt.NDArray | None = None,
 ) -> tuple[svs.Vamana, str]:
     logger.info({"build_args": locals()})
     logger.info(utils.read_system_config())
@@ -360,7 +438,11 @@ def build_static(
     index = svs.Vamana.build(
         parameters,
         create_loader(
-            svs_type, vecs_path=vecs_path, leanvec_dims=leanvec_dims
+            svs_type,
+            vecs_path=vecs_path,
+            leanvec_dims=leanvec_dims,
+            data_matrix=data_matrix,
+            query_matrix=query_matrix,
         ),
         distance,
         num_threads=max_threads,
