@@ -27,6 +27,8 @@ python -m svsbench.build \
 
 #### Building a LeanVec-OOD index
 
+LeanVec-OOD is a dimensionality reduction method that works even if the query vectors have a different distribution than the base vectors.
+
 ```sh
 python -m svsbench.build \
     --vecs_file /path/to/vectors.fvecs \
