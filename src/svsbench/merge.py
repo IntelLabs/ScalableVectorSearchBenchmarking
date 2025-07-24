@@ -36,6 +36,8 @@ def _read_dim(fname: Path) -> int:
 
 def read_vecs(fname: Path, max_vectors: int | None = None) -> npt.NDArray:
     """Create NumPy memory maps."""
+    if max_vectors == 0:
+        max_vectors = None
     dim = _read_dim(fname)
     padding = SUFFIX_TO_PADDING[fname.suffix]
     array = np.memmap(fname, dtype=SUFFIX_TO_DTYPE[fname.suffix], mode="r")
