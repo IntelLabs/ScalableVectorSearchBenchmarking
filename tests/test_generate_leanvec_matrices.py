@@ -13,8 +13,8 @@ def test_main(tmp_path, tmp_vecs, query_path):
 
 
 def test_generate_with_all_vectors(tmp_vecs, query_path):
-    print(svsbench.generate_leanvec_matrices.generate_leanvec_matrices(
+    svsbench.generate_leanvec_matrices.generate_leanvec_matrices(
         tmp_vecs,
         query_path,
         max_vectors=0,
-    ))
+    )
