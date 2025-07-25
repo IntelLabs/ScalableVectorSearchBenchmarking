@@ -27,7 +27,7 @@ python -m svsbench.build \
 
 #### Building a LeanVec-OOD index
 
-LeanVec-OOD is a dimensionality reduction method that works even if the query vectors have a different distribution than the base vectors.
+[LeanVec-OOD](https://openreview.net/forum?id=wczqrpOrIc) is a dimensionality reduction method for cases where query and base vectors have different distributions (e.g., text-to-image search). Use `--train_query_file` to provide training queries.
 
 ```sh
 python -m svsbench.build \
