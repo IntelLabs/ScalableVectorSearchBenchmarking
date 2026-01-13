@@ -60,7 +60,7 @@ def write(inputs: list[Path], output: Path, num_vectors: int | None) -> None:
 
 def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Read command line arguments."""
-    parser = argparse.ArgumentParser(description=__file__.__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
             "i", help="Input file names", action="extend", type=Path, nargs="+"
     )
