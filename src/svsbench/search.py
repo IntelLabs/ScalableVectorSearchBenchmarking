@@ -30,7 +30,7 @@ STR_TO_CALIBRATE_SEARCH_BUFFER: Final[
 
 def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Read command line arguments."""
-    parser = argparse.ArgumentParser(description=__file__.__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
     utils.add_common_arguments(parser)
     parser.add_argument(
         "--batch_size", help="Batch size", type=int, action="append"

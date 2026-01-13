@@ -17,7 +17,7 @@ logger = logging.getLogger(__file__)
 
 def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Read command line arguments."""
-    parser = argparse.ArgumentParser(description=__file__.__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--idx_dir", help="Index dir", type=Path)
     parser.add_argument(
         "--no_dynamic", action="store_true", help="Do not use dynamic index"

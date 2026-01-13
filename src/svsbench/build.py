@@ -26,7 +26,7 @@ logger = logging.getLogger(__file__)
 
 def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Read command line arguments."""
-    parser = argparse.ArgumentParser(description=__file__.__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
     utils.add_common_arguments(parser)
     parser.add_argument(
         "--vecs_file", help="Vectors *vecs file", type=Path, required=True
