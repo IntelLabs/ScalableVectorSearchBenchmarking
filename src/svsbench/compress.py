@@ -38,6 +38,7 @@ def main(argv: str | None = None) -> None:
     )
     print("Logging to", log_file, sep="\n")
     logger.info({"argv": argv if argv else sys.argv})
+    utils.check_uncommitted_and_log_version(logger, args.uncommitted)
     compress(
         idx_dir=args.idx_dir,
         svs_type=args.svs_type,

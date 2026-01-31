@@ -66,6 +66,7 @@ def test_main_with_train_query(tmp_path, tmp_vecs, query_path):
             str(query_path),
             "--out_dir",
             str(tmp_path),
+            "--uncommitted",
         ]
     )
 
@@ -100,5 +101,6 @@ def test_main_with_matrices(tmp_path, tmp_vecs, query_path):
             str(query_matrix_path),
             "--out_dir",
             str(tmp_path),
+            "--uncommitted",
         ]
     )

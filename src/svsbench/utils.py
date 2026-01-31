@@ -5,13 +5,14 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 from warnings import warn
 
 import svs
 
-from . import consts
+from . import consts, __version__
 
+UNCOMMITTED: Final = "--uncommitted"
 
 class JSONFormatter(logging.Formatter):
     """Formatter that dumps msg and created as JSON."""
@@ -209,6 +210,11 @@ def add_common_arguments(parser):
         choices=consts.SVS_TYPES,
         default="float32",
     )
+    parser.add_argument(
+        UNCOMMITTED,
+        action="store_true",
+        help="Run even if there are changes in SVSBench not committed to git",
+    )
 
 
 def ground_truth_path(
@@ -230,3 +236,31 @@ def ground_truth_path(
             f"{seed if seed is not None else False}.ivecs",
         )
     )
+
+def check_uncommitted_and_log_version(
+    logger: logging.Logger, uncommitted: bool
+) -> None:
+    """Check if SVSBench is using uncommitted code and log version.
+
+    The version has a suffix starting with "d2" when there are
+    uncommitted code changes, e.g., "0.1.1.dev4+gcf3cee1.d20250501".
+    Without uncommitted changes, that suffix is missing, e.g.,
+    "0.1.1.dev4+gcf3cee1".
+
+    Args:
+        logger: Logger to log the version.
+        uncommitted: If True, do not raise an error when uncommitted
+            code changes are detected.
+    Raises:
+        RuntimeError: If uncommitted code changes are detected and
+            `uncommitted` is False.
+    """
+    if "." in __version__ and __version__.rsplit(".", 1)[1].startswith("d2"):
+        if not uncommitted:
+            raise RuntimeError(
+                "Uncommitted changes detected. To ignore this error,"
+                f" add {UNCOMMITTED} to the SVSBench call."
+            )
+        else:
+            logger.warning("uncommitted_code_changes")
+    logger.info({"version": __version__})

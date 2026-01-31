@@ -341,6 +341,7 @@ def main(argv: str | None = None) -> None:
     )
     print("Logging to", log_file, sep="\n")
     logger.info({"argv": sys.argv})
+    utils.check_uncommitted_and_log_version(logger, args.uncommitted)
     search(
         idx_dir=args.idx_dir,
         vecs_path=args.vecs_file,
