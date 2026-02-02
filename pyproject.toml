@@ -1,11 +1,11 @@
 [project]
 name = "svsbench"
-version = "0.1.0"
 description = "Benchmarking for Scalable Vector Search"
 readme = "README.md"
 authors = [
     { name = "Mihai Capotă", email = "mihai.capota@intel.com" }
 ]
+dynamic = ["version"]
 requires-python = ">=3.12"
 dependencies = [
     "numpy>=1.10",
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
@@ -24,6 +24,9 @@ dev = [
     "pytest-cov>=6.0.0",
     "ruff>=0.9.6",
 ]
+
+[tool.hatch.version]
+source = "vcs"
 
 [tool.ruff]
 line-length = 79

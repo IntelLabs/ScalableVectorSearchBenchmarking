@@ -46,6 +46,7 @@ def main(argv: str | None = None) -> None:
     )
     print("Logging to", log_file, sep="\n")
     logger.info({"argv": argv if argv else sys.argv})
+    utils.check_uncommitted_and_log_version(logger, args.uncommitted)
     generate_ground_truth(
         vecs_path=args.vecs_file,
         query_file=args.query_file,
