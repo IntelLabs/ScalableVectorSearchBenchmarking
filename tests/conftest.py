@@ -15,19 +15,23 @@ INT_TO_LEANVEC_KIND: Final = {
     8: svs.LeanVecKind.lvq8,
 }
 
+RANDOM_VECTORS_SHAPE: Final = (1000, 100)
+NUM_RANDOM_QUERY_VECTORS: Final = 100
+GROUND_TRUTH_K: Final = 100
+
 
 def random_array(dtype: np.dtype) -> np.ndarray:
     rng = np.random.default_rng(42)
     if np.dtype(dtype).kind == "i":
         iinfo = np.iinfo(dtype)
-        return rng.integers(iinfo.min, iinfo.max, (1000, 100), dtype=dtype)
+        return rng.integers(
+            iinfo.min, iinfo.max, RANDOM_VECTORS_SHAPE, dtype=dtype
+        )
     else:
-        return rng.random((1000, 100)).astype(dtype)
+        return rng.random(RANDOM_VECTORS_SHAPE).astype(dtype)
 
 
-@pytest.fixture(
-    scope="session", params=consts.SUFFIX_TO_SVS_TYPE.keys()
-)
+@pytest.fixture(scope="session", params=consts.SUFFIX_TO_SVS_TYPE.keys())
 def tmp_vecs(request, tmp_path_factory):
     suffix = request.param
     vecs_path = tmp_path_factory.mktemp("vecs") / ("random" + suffix)
@@ -134,7 +138,10 @@ def index_dir_with_svs_type_and_dynamic(request, tmp_path_factory):
 def query_path(tmp_path_factory) -> Path:
     path = tmp_path_factory.mktemp("query") / "query.fvecs"
     svs.write_vecs(
-        np.random.default_rng(42).random((100, 100)).astype(np.float32), path
+        np.random.default_rng(42)
+        .random((NUM_RANDOM_QUERY_VECTORS, RANDOM_VECTORS_SHAPE[1]))
+        .astype(np.float32),
+        path,
     )
     return path
 
@@ -162,7 +169,7 @@ def ground_truth_path(
     )
     vectors = np.load(index_dir / "data.npy")
     index = svs.Flat(vectors, distance=distance, num_threads=num_threads)
-    idxs, _ = index.search(svs.read_vecs(str(query_path)), 100)
+    idxs, _ = index.search(svs.read_vecs(str(query_path)), GROUND_TRUTH_K)
     ground_truth_path = (
         tmp_path_factory.mktemp("ground_truth")
         / f"ground_truth_{index_svs_type}.ivecs"
