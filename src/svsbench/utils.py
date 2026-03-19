@@ -70,18 +70,18 @@ def read_free_huge_pages() -> list[int]:
 
 def read_system_config() -> dict[str, Any]:
     """Read system information."""
+    no_turbo_path = Path(
+        "/sys/devices/system/cpu/intel_pstate/no_turbo"
+    )
+    no_turbo = int(no_turbo_path.read_text()) if no_turbo_path.exists() else None
+    governor_path = Path(
+        "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+    )
+    governor = governor_path.read_text().strip() if governor_path.exists() else None
     return {
         "system_config": {
-            "no_turbo": int(
-                Path(
-                    "/sys/devices/system/cpu/intel_pstate/no_turbo"
-                ).read_text()
-            ),
-            "governor": Path(
-                "/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
-            )
-            .read_text()
-            .strip(),
+            "no_turbo": no_turbo,
+            "governor": governor,
             "free_huge_pages": read_free_huge_pages(),
         }
     }

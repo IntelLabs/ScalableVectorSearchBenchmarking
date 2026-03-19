@@ -169,7 +169,7 @@ wheels = [
 
 [[package]]
 name = "scalable-vs"
-version = "0.0.7"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "archspec" },
@@ -177,7 +177,8 @@ dependencies = [
     { name = "toml" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f8/f8/c48cb2079bbf79f6b759e29770d2c58951f9adab96dfe516ed7b54064857/scalable_vs-0.0.7-0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:a0269a02d953cf2837ad41d8e56f2d080da024084b18218a655b9278d6ad4af2", size = 15264130, upload-time = "2025-03-11T17:11:06.091Z" },
+    { url = "https://files.pythonhosted.org/packages/26/0f/2a50e5a670d71ce365aaaad2bf10298ef754adeaf3a75838632de043e2a4/scalable_vs-0.2.0-0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:5d0e646a61790953f38a5a0db14302fa0a1e74420057417a2527577e90fe0f14", size = 9647494, upload-time = "2026-02-26T10:07:57.792Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/84/1ea13903187afe2e81dc6d8944ccaea805014fdd88cfe8b41feb20346e16/scalable_vs-0.2.0-0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:6cf5c9b679ee3ec9442c27b1fc4cd3655d130e63a8d5af1afb4e0d8052ba252e", size = 9655423, upload-time = "2026-02-26T10:08:02.045Z" },
 ]
 
 [[package]]
