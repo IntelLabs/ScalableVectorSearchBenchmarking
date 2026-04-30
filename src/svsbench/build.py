@@ -380,6 +380,7 @@ def build_dynamic(
             )
             start = time.perf_counter()
             index.delete(ids_to_delete)
+            index.consolidate()
             delete_time[batch_idx + 1] = time.perf_counter() - start
     if num_batches:
         add_time_mean = np.mean(ingest_time[1:])
@@ -388,6 +389,15 @@ def build_dynamic(
             / add_time_mean
         )
         logger.info({"add_time": {"mean": add_time_mean, "rsd": add_time_rsd}})
+
+        if delete_time is not None:
+            delete_time_mean = np.mean(delete_time[1:])
+            delete_time_rsd = (
+                np.std(delete_time[1:], ddof=min(1, num_batches - 1))
+                / delete_time_mean
+            )
+            logger.info({"delete_time": {"mean": delete_time_mean, "rsd": delete_time_rsd}})
+
         logger.info({"build_and_add_time": np.sum(ingest_time)})
 
     name = "__".join(
