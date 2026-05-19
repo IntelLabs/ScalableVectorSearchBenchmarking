@@ -128,8 +128,8 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="all",
     )
     parser.add_argument(
-        "--shuffle_ground_truth",
-        help="Shuffle ground truth. See also svsbench.build --shuffle",
+        "--shuffle",
+        help="Undo the effect of vector shuffling done during build. See also svsbench.build --shuffle",
         action="store_true",
     )
     return parser.parse_args(argv)
@@ -164,7 +164,7 @@ def search(
     lvq_strategy: svs.LVQStrategy | None = None,
     train_prefetchers: bool = True,
     search_buffer_optimization: svs.VamanaSearchBufferOptimization = svs.VamanaSearchBufferOptimization.All,
-    shuffle_ground_truth: bool = False,
+    shuffle: bool = False,
     seed: int = 42,
 ):
     logger.info({"search_args": locals()})
@@ -216,8 +216,10 @@ def search(
 
     query = svs.read_vecs(str(query_path))
     ground_truth = svs.read_vecs(str(ground_truth_path))
-    if shuffle_ground_truth:
-        np.random.default_rng(seed).shuffle(ground_truth)
+    if shuffle:
+        dtype = ground_truth.dtype
+        permutation = np.random.default_rng(seed).permutation(index.size)
+        ground_truth = np.argsort(permutation)[ground_truth].astype(dtype=dtype, casting="same_value")
 
     for batch_size_idx, batch_size in enumerate(batch_sizes):
         index.num_threads = min(max_threads, batch_size)
@@ -300,7 +302,7 @@ def search(
         p95s = []
         for _ in tqdm(range(num_rep)):
             total_time = 0
-            results = np.empty((0, count), np.int32)
+            results = None
             batch_times = []
             for batch_idx in tqdm(range(num_batches)):
                 init_batch = batch_idx * batch_size
@@ -311,7 +313,10 @@ def search(
                 batch_time = time.perf_counter() - start
                 total_time += batch_time
                 batch_times.append(batch_time)
-                results = np.append(results, result, axis=0)
+                if results is None:
+                    results = result
+                else:
+                    results = np.append(results, result, axis=0)
 
             qps.append(query_size / total_time)
             p95s.append(np.percentile(batch_times, 95))
@@ -381,7 +386,7 @@ def main(argv: str | None = None) -> None:
         search_buffer_optimization=STR_TO_CALIBRATE_SEARCH_BUFFER[
             args.calibrate_search_buffer
         ],
-        shuffle_ground_truth=args.shuffle_ground_truth,
+        shuffle=args.shuffle,
         seed=args.seed,
     )
 
