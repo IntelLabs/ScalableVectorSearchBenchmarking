@@ -65,7 +65,7 @@ def generate_ground_truth(
     vecs_path: Path,
     query_file: Path,
     distance: svs.DistanceType,
-    num_vectors: int | None,
+    num_vectors: int | None = None,
     k: int = 100,
     num_threads: int = 1,
     out_file: Path | None = None,

@@ -478,6 +478,7 @@ def save(
         str(idx_dir / "data"),
     )
     logger.info({"index_saved": idx_dir})
+    return idx_dir
 
 
 if __name__ == "__main__":

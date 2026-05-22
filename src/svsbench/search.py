@@ -148,7 +148,7 @@ def search(
     max_threads=255,
     search_window_sizes: list[int] | None = None,
     recall: float = 0.9,
-    compress: bool = True,
+    compress: bool = False,
     leanvec_dims: int | None = -4,
     leanvec_alignment: int | None = 32,
     num_rep: int = 5,

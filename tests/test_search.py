@@ -3,7 +3,9 @@
 import pytest
 import svs
 
+from svsbench.build import build_dynamic, save
 from svsbench.consts import SVS_TYPES
+from svsbench.generate_ground_truth import generate_ground_truth
 from svsbench.search import search
 
 
@@ -44,3 +46,35 @@ def test_search(
 
 def test_search_with_separate_data_dir():
     pytest.xfail("TODO: Implement")
+
+
+@pytest.mark.parametrize("tmp_vecs", [".fvecs"], indirect=True)
+def test_search_with_shuffle(tmp_vecs, query_path, tmp_path):
+    seed = 123
+    svs_type = "float32"
+    distance = svs.DistanceType.L2
+
+    ground_truth_path = tmp_path / "ground_truth.ivecs"
+    generate_ground_truth(
+        vecs_path=tmp_vecs,
+        query_file=query_path,
+        distance=distance,
+        out_file=ground_truth_path,
+    )
+    build_result = build_dynamic(
+        vecs_path=tmp_vecs,
+        svs_type=svs_type,
+        distance=distance,
+        shuffle=True,
+        seed=seed,
+    )
+    idx_dir = save(build_result[0], tmp_path)
+    search(
+        idx_dir=idx_dir,
+        svs_type=svs_type,
+        distance=distance,
+        ground_truth_path=ground_truth_path,
+        query_path=query_path,
+        shuffle=True,
+        seed=seed,
+    )
