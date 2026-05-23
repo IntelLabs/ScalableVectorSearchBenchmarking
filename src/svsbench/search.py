@@ -166,7 +166,7 @@ def search(
     search_buffer_optimization: svs.VamanaSearchBufferOptimization = svs.VamanaSearchBufferOptimization.All,
     shuffle: bool = False,
     seed: int = 42,
-):
+) -> tuple[np.ndarray, np.ndarray, float]:
     logger.info({"search_args": locals()})
     logger.info(utils.read_system_config())
     if query_path is None:
@@ -309,14 +309,16 @@ def search(
                 end_batch = min(init_batch + batch_size, query_size)
 
                 start = time.perf_counter()
-                result, _ = index.search(query[init_batch:end_batch], count)
+                result, batch_distances = index.search(query[init_batch:end_batch], count)
                 batch_time = time.perf_counter() - start
                 total_time += batch_time
                 batch_times.append(batch_time)
                 if results is None:
                     results = result
+                    distances = batch_distances
                 else:
                     results = np.append(results, result, axis=0)
+                    distances = np.append(distances, batch_distances, axis=0)
 
             qps.append(query_size / total_time)
             p95s.append(np.percentile(batch_times, 95))
@@ -343,6 +345,7 @@ def search(
                 },
             }
         )
+        return results, distances, recall
 
 
 def main(argv: str | None = None) -> None:

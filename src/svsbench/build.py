@@ -469,7 +469,7 @@ def save(
     index: svs.Vamana | svs.DynamicVamana,
     out_dir: Path = Path("out"),
     name: str = "index",
-) -> None:
+) -> Path:
     idx_dir = out_dir / name
     idx_dir.mkdir(exist_ok=True)
     index.save(

@@ -32,7 +32,7 @@ def test_search(
             pytest.skip("Not supported")
     if svs_type != index_svs_type:
         compress = True
-    search(
+    _, _, recall = search(
         idx_dir=index_dir,
         svs_type=svs_type,
         distance=svs.DistanceType.L2,
@@ -42,6 +42,8 @@ def test_search(
         static=static,
         load_from_static=not index_dynamic,
     )
+    # Search parameters are calibrated to recall 0.9
+    assert recall > 0.8
 
 
 def test_search_with_separate_data_dir():
@@ -69,7 +71,7 @@ def test_search_with_shuffle(tmp_vecs, query_path, tmp_path):
         seed=seed,
     )
     idx_dir = save(build_result[0], tmp_path)
-    search(
+    _, _, recall = search(
         idx_dir=idx_dir,
         svs_type=svs_type,
         distance=distance,
@@ -78,3 +80,5 @@ def test_search_with_shuffle(tmp_vecs, query_path, tmp_path):
         shuffle=True,
         seed=seed,
     )
+    # Search parameters are calibrated to recall 0.9
+    assert recall > 0.8
