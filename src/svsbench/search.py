@@ -129,7 +129,7 @@ def _read_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--shuffle",
-        help="Undo the effect of vector shuffling done during build. See also svsbench.build --shuffle",
+        help="Search an index built with svsbench.build --shuffle",
         action="store_true",
     )
     return parser.parse_args(argv)
