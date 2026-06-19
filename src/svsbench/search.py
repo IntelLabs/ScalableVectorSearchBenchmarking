@@ -166,7 +166,7 @@ def search(
     search_buffer_optimization: svs.VamanaSearchBufferOptimization = svs.VamanaSearchBufferOptimization.All,
     shuffle: bool = False,
     seed: int = 42,
-) -> tuple[np.ndarray, np.ndarray, float]:
+) -> tuple[list[np.ndarray], list[np.ndarray], list[float]]:
     logger.info({"search_args": locals()})
     logger.info(utils.read_system_config())
     if query_path is None:
@@ -221,6 +221,9 @@ def search(
         permutation = np.random.default_rng(seed).permutation(index.size)
         ground_truth = np.argsort(permutation)[ground_truth].astype(dtype=dtype, casting="same_value")
 
+    results_all = []
+    distances_all = []
+    recalls_all = []
     for batch_size_idx, batch_size in enumerate(batch_sizes):
         index.num_threads = min(max_threads, batch_size)
         if search_window_sizes is None:
@@ -345,7 +348,10 @@ def search(
                 },
             }
         )
-        return results, distances, recall
+        results_all.append(results)
+        distances_all.append(distances)
+        recalls_all.append(recall)
+    return results_all, distances_all, recalls_all
 
 
 def main(argv: str | None = None) -> None:
