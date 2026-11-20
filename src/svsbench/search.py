@@ -217,9 +217,18 @@ def search(
     query = svs.read_vecs(str(query_path))
     ground_truth = svs.read_vecs(str(ground_truth_path))
     if shuffle:
-        dtype = ground_truth.dtype
         permutation = np.random.default_rng(seed).permutation(index.size)
-        ground_truth = np.argsort(permutation)[ground_truth].astype(dtype=dtype, casting="same_value")
+        inverse_permutation = np.argsort(permutation)
+
+    def to_index_ids(neighbors: np.ndarray) -> np.ndarray:
+        """Map ground truth ids of the unshuffled vectors to index ids."""
+        if not shuffle:
+            return neighbors
+        return inverse_permutation[neighbors].astype(
+            dtype=neighbors.dtype, casting="same_value"
+        )
+
+    ground_truth = to_index_ids(ground_truth)
 
     for batch_size_idx, batch_size in enumerate(batch_sizes):
         index.num_threads = min(max_threads, batch_size)
@@ -230,8 +239,8 @@ def search(
                     raise ValueError(
                         "Calibration ground truth is required when calibration query is provided"
                     )
-                calibration_ground_truth = svs.read_vecs(
-                    str(calibration_ground_truth_path)
+                calibration_ground_truth = to_index_ids(
+                    svs.read_vecs(str(calibration_ground_truth_path))
                 )
             else:
                 calibration_query = query
